@@ -1,0 +1,12 @@
+node_modules
+.idea
+secrets.json
+migrations
+build
+accoupts.json
+.env
+.secret
+.vscode
+cache
+artifacts
+config.txt
