@@ -1273,25 +1273,20 @@ abstract contract FeeManager is StratManager {
     uint constant public MAX_FEE = 1000;
     uint constant public MAX_CALL_FEE = 111;
 
-    uint constant public WITHDRAWAL_FEE_CAP = 50;
-    uint constant public WITHDRAWAL_MAX = 10000;
-
-    uint public withdrawalFee = 10;
+    uint public performanceFee = 25;
 
     uint public callFee = 111;
     uint public beefyFee = MAX_FEE - STRATEGIST_FEE - callFee;
 
     function setCallFee(uint256 _fee) public onlyManager {
         require(_fee <= MAX_CALL_FEE, "!cap");
-
         callFee = _fee;
         beefyFee = MAX_FEE - STRATEGIST_FEE - callFee;
     }
 
-    function setWithdrawalFee(uint256 _fee) public onlyManager {
-        require(_fee <= WITHDRAWAL_FEE_CAP, "!cap");
-
-        withdrawalFee = _fee;
+    function setPerformanceFee(uint256 _fee) public onlyManager {
+        require(_fee <= 50, "!cap");
+        performanceFee = _fee;
     }
 }
 
@@ -1402,12 +1397,7 @@ contract StrategyMiniChefLP is StratManager, FeeManager {
             wantBal = _amount;
         }
 
-        if (tx.origin == owner() || paused()) {
-            IERC20(want).safeTransfer(vault, wantBal);
-        } else {
-            uint256 withdrawalFeeAmount = wantBal.mul(withdrawalFee).div(WITHDRAWAL_MAX);
-            IERC20(want).safeTransfer(vault, wantBal.sub(withdrawalFeeAmount));
-        }
+        IERC20(want).safeTransfer(vault, wantBal);
     }
 
     function beforeDeposit() external override {
@@ -1448,7 +1438,7 @@ contract StrategyMiniChefLP is StratManager, FeeManager {
             IUniswapRouterETH(unirouter).swapExactTokensForTokens(toOutput, 0, nativeToOutputRoute, address(this), block.timestamp);
         }
 
-        uint256 toNative = IERC20(output).balanceOf(address(this)).mul(45).div(1000);
+        uint256 toNative = IERC20(output).balanceOf(address(this)).mul(performanceFee).div(MAX_FEE);
         IUniswapRouterETH(unirouter).swapExactTokensForTokens(toNative, 0, outputToNativeRoute, address(this), block.timestamp);
 
         uint256 nativeBal = IERC20(native).balanceOf(address(this));
@@ -1526,7 +1516,7 @@ contract StrategyMiniChefLP is StratManager, FeeManager {
             pendingNative = IRewarder(rewarder).pendingToken(poolId, address(this));
         }
 
-        return pendingNative.add(nativeOut).mul(45).div(1000).mul(callFee).div(MAX_FEE);
+        return pendingNative.add(nativeOut).mul(performanceFee).div(1000).mul(callFee).div(MAX_FEE);
     }
 
     function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyManager {

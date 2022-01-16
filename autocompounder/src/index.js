@@ -83,11 +83,12 @@ const main = async () => {
             const symbol = await vault.methods.symbol().call();
 
             cyan(i,') ', vaultAddress, symbol, '>');
-            cyan('\t', ts.toString(), 'errors('+errors+')', error);
+            // cyan('\t', ts.toString(), 'errors('+errors+')', error);
             if (totalSupply > 0) {
                 const supply = new Number(totalSupply / 1e18).toFixed(12);
                 yellow('\tsupply='+supply);
-                await exec(i, strategy);
+                await timeout(5000);
+                // await exec(i, strategy);
             } else {
                 yellow('\t', vaultAddress, symbol, '(is empty)');
             }
@@ -110,8 +111,13 @@ const main = async () => {
 
 }
 
+async function timeout(ms) {
+    await new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const exec = async (i, strategy) => {
     try {
+
         const contract = new web3.eth.Contract(abi_strategy, strategy)
         const transaction = await contract.methods.harvest()
         const signed = await web3.eth.accounts.signTransaction(
