@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -26,7 +26,7 @@ abstract contract Context {
 
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -105,7 +105,7 @@ interface IERC20 {
 
 // File @openzeppelin/contracts/math/SafeMath.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -321,7 +321,7 @@ library SafeMath {
 
 // File @openzeppelin/contracts/token/ERC20/ERC20.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 
 
@@ -627,7 +627,7 @@ contract ERC20 is Context, IERC20 {
 
 // File @openzeppelin/contracts/utils/Address.sol@v3.4.1
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity >=0.6.2 <0.7.0;
 
 /**
  * @dev Collection of functions related to the address type
@@ -817,7 +817,7 @@ library Address {
 
 
 // File @openzeppelin/contracts/token/ERC20/SafeERC20.sol@v3.4.1
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 
 
@@ -892,7 +892,7 @@ library SafeERC20 {
 
 // File @openzeppelin/contracts/access/Ownable.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -961,7 +961,7 @@ abstract contract Ownable is Context {
 
 // File @openzeppelin/contracts/utils/ReentrancyGuard.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.
