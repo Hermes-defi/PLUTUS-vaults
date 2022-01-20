@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.12;
 
-// import "github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v3.1.0/contracts/access/Ownable.sol";
-// import "github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v3.1.0/contracts/token/ERC20/SafeERC20.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -13,8 +10,6 @@ import "./interfaces/IUniPair.sol";
 import "./interfaces/IPlutusMinChefVault.sol";
 import "./interfaces/IWETH.sol";
 
-//TODO: figure out router address
-//TODO: figure out path to take
 //TODO: deploy script  with addr for each vault or use factory?
 
 /**
@@ -144,10 +139,9 @@ contract Zap is Ownable {
     function zapInAndStake(
         address _to, // lptoken
         address routerAddr,
-        address _recipient, //msg.sender
+        // address _recipient, //msg.sender
         address[] memory path0,
-        address[] memory path1,
-        uint256 vaultPid //pid
+        address[] memory path1 // uint256 vaultPid //pid
     ) external payable {
         // TODO: use delegate call to preserve context
         // Also stakes in vault, no fees
@@ -182,11 +176,7 @@ contract Zap is Ownable {
             address(this)
         );
         //send Plutus Sushi USDC-ONE token to msg.sender
-        IERC20(vaultChefAddress).safeTransfer(
-            msg.sender,
-            zapBalance
-        );
-        
+        IERC20(vaultChefAddress).safeTransfer(msg.sender, zapBalance);
     }
 
     function zapInTokenAndStake(
@@ -194,10 +184,9 @@ contract Zap is Ownable {
         uint256 amount,
         address _to,
         address routerAddr,
-        address _recipient,
+        // address _recipient,
         address[] memory path0,
-        address[] memory path1,
-        uint256 vaultPid
+        address[] memory path1 // uint256 vaultPid
     ) external {
         // Also stakes in vault, no fees
         require(amount > MIN_AMT, "INPUT_TOO_LOW");
@@ -218,11 +207,12 @@ contract Zap is Ownable {
         IPlutusMinChefVault(vaultChefAddress).deposit(lps); //TODO: remove extra
     }
 
+    //swap LPtoken -> NATIVE
     function zapOut(
-        address _from,
+        address _from, //lptoken
         uint256 amount,
         address routerAddr,
-        address _recipient,
+        address _recipient, //msg.sender
         address[] memory path0,
         address[] memory path1
     ) external {
@@ -256,7 +246,7 @@ contract Zap is Ownable {
         uint256 amount,
         address _to,
         address routerAddr,
-        address _recipient,
+        // address _recipient,
         address[] memory path0,
         address[] memory path1
     ) external {
@@ -429,7 +419,8 @@ contract Zap is Ownable {
         return IERC20(path[path.length - 1]).balanceOf(address(this));
     }
 
-    function getWantForVault(uint256 pid) public view returns (address) {
+    // function getWantForVault(uint256 pid) public view returns (address) {
+    function getWantForVault() public view returns (address) {
         // (address wantAddress, ) = IPlutusMinChefVault(vaultChefAddress).poolInfo(pid);
         IERC20 wantAddress = IPlutusMinChefVault(vaultChefAddress).want();
         // return wantAddress;
