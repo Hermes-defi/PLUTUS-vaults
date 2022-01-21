@@ -26,7 +26,7 @@ contract Zap is Ownable {
     zapInTokenAndStake | No fee.    Goes from ERC20 token -> LP -> Vault and returns dust.
     zapOut             | No fee.    Breaks LP token and trades it back for ETH.
     zapOutToken        | No fee.    Breaks LP token and trades it back for desired token.
-    swap               | No fee.    token for token. Allows us to have a $FOX swap on our site (sitting on top of DFK or Sushi)
+    swap               | No fee.    token for token. Allows us to have a $PLUTUS swap on our site (sitting on top of DFK or Sushi)
     */
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
