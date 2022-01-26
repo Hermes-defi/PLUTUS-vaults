@@ -333,5 +333,17 @@ contract("Zap", ([deployer, alice, bob, feeCollector, devTeam]) => {
 
   });
 
+  describe("Ownership", async () => {
+    it("Should not transfer ownership", async () => {
+      await expectRevert(this.zap.transferOwnership(devTeam, { from: alice }), "Ownable: caller is not the owner");
+    });
+    it("Should transfer ownership", async () => {
+      await this.zap.transferOwnership(devTeam, { from: deployer });
+      const newOnwer = await this.zap.owner();
+      assert.equal(newOnwer, devTeam);
+    });
+
+  });
+
 });
 
