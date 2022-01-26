@@ -129,10 +129,7 @@ contract Zap is Ownable {
         // Take fee first because _swapTokenToLP will return dust
         uint256 fee = uint256(amount).div(FEE_RATE);
 
-        IERC20(_from).safeTransfer(
-            FEE_TO_ADDR,
-            IERC20(_from).balanceOf(address(this))
-        ); // transfer All erc 20 token to this contract
+        IERC20(_from).safeTransfer(FEE_TO_ADDR, fee); // transfer fees to fee collector.
 
         _swapTokenToLP(
             _from,
@@ -165,9 +162,6 @@ contract Zap is Ownable {
     ) external payable {
         // Also stakes in vault, no fees
         require(uint256(msg.value) > MIN_AMT, "INPUT_TOO_LOW");
-        // not using any vault ID;
-        // (address vaultWant, ) = IPlutusMinChefVault(vaultChefAddress).poolInfo(vaultPid);
-        // require(vaultWant == _to, "Wrong wantAddress for vault pid");
 
         IWETH(WNATIVE).deposit{value: uint256(msg.value)}();
         _approveTokenIfNeeded(WNATIVE, routerAddr); // approve if needed
@@ -183,11 +177,7 @@ contract Zap is Ownable {
 
         _approveTokenIfNeeded(_to, vaultChefAddress); //approve token if needed
 
-        // IPlutusMinChefVault(vaultChefAddress).deposit(vaultPid, lps, _recipient); //TODO: remove extra param. only need amount
         IPlutusMinChefVault(vaultChefAddress).deposit(lps); // deposit lp into vault.
-
-        // (bool success,) = address(vaultChefAddress).delegatecall(abi.encodeWithSignature("deposit(uint256)",_amount));
-        // require(success, "delegate call fail");
 
         uint256 zapBalance = IPlutusMinChefVault(vaultChefAddress).balanceOf(
             address(this)
@@ -216,7 +206,6 @@ contract Zap is Ownable {
         address[] memory path0,
         address[] memory path1
     ) external {
-        // Also stakes in vault, no fees
         require(amount > MIN_AMT, "INPUT_TOO_LOW");
 
         IERC20(_from).safeTransferFrom(msg.sender, address(this), amount);
@@ -232,12 +221,16 @@ contract Zap is Ownable {
         ); // keep fund in contract for later staking
         _approveTokenIfNeeded(_to, vaultChefAddress);
         IPlutusMinChefVault(vaultChefAddress).deposit(lps);
+
+        //send Plutus Sushi USDC-ONE token to msg.sender
+        IERC20(vaultChefAddress).safeTransfer(
+            msg.sender,
+            IPlutusMinChefVault(vaultChefAddress).balanceOf(address(this))
+        );
     }
 
     /**
      * @dev Swaps from LP token to NATIVE coin via specified router.
-     * Stake LP token in the vault and receive vault token.
-     * Transfer vault token to msg.sender.
      * Does not collect fee.
      * @param _from address of lpToken
      * @param routerAddr address of DEX router address
@@ -262,6 +255,7 @@ contract Zap is Ownable {
         address token1 = IUniPair(_from).token1();
         _approveTokenIfNeeded(token0, routerAddr);
         _approveTokenIfNeeded(token1, routerAddr);
+
         // convert both for Native with msg.sender as recipient
         uint256 amt0;
         uint256 amt1;
@@ -280,8 +274,7 @@ contract Zap is Ownable {
 
     /**
      * @dev Swaps from LP token to specified token via specified router.
-     * Stake LP token in the vault and receive vault token.
-     * Transfer vault token to msg.sender.
+     * will automatically swap to ONE if WONE if provided as token
      * Does not collect fee.
      * @param _from address of lpToken
      * @param _to address of ERC20
@@ -294,7 +287,6 @@ contract Zap is Ownable {
         uint256 amount,
         address _to,
         address routerAddr,
-        // address _recipient,
         address[] memory path0,
         address[] memory path1
     ) external {
