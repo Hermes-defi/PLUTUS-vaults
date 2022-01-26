@@ -20,8 +20,8 @@ import "./interfaces/IWETH.sol";
 
 contract Zap is Ownable {
     /*
-    zapIn              | 0.25% fee. Goes from ETH -> LP tokens and return dust.
-    zapInToken         | 0.25% fee. Goes from ERC20 token -> LP and returns dust.
+    zapIn              | No fee. Goes from ETH -> LP tokens and return dust.
+    zapInToken         | No fee. Goes from ERC20 token -> LP and returns dust.
     zapInAndStake      | No fee.    Goes from ETH -> LP -> Vault and returns dust.
     zapInTokenAndStake | No fee.    Goes from ERC20 token -> LP -> Vault and returns dust.
     zapOut             | No fee.    Breaks LP token and trades it back for ETH.
@@ -35,29 +35,18 @@ contract Zap is Ownable {
 
     address public WNATIVE;
     address public vaultChefAddress;
-    address private FEE_TO_ADDR;
-    uint16 FEE_RATE;
     uint16 MIN_AMT;
     mapping(address => mapping(address => address))
         private tokenBridgeForRouter;
 
-    event FeeChange(address fee_to, uint16 rate, uint16 min);
-
     mapping(address => bool) public useNativeRouter;
 
     /**
-     * @dev Payable function.
-     * requires a WONE addr; vault addr;fee collector.
+     * @dev requires a WONE addr; vault chef addr;
      */
-    constructor(
-        address _WNATIVE,
-        address _vaultChefAddress,
-        address feeAddress
-    ) public Ownable() {
+    constructor(address _WNATIVE, address _vaultChefAddress) public Ownable() {
         WNATIVE = _WNATIVE;
         vaultChefAddress = _vaultChefAddress;
-        FEE_TO_ADDR = feeAddress;
-        FEE_RATE = 400; // Math is: fee = amount/FEE_RATE, so 400 = 0.25%
         MIN_AMT = 1000;
     }
 
@@ -68,8 +57,7 @@ contract Zap is Ownable {
     /**
      * @dev Payable function.
      * Swaps from Native coin to an LP token via specified router.
-     * Collects a fee for each transaction. see above.
-     * Sends fee to fee collector addr
+     * Does not Stake into vault.
      * @param _to address of lpToken
      * @param routerAddr address of DEX router address
      * @param _recipient address of funds recipient. this could be different from msg.sender.
@@ -85,26 +73,23 @@ contract Zap is Ownable {
     ) external payable {
         // from Native to an LP token through the specified router
         require(uint256(msg.value) > MIN_AMT, "INPUT_TOO_LOW");
-        uint256 fee = uint256(msg.value).div(FEE_RATE); // set fee
 
-        IWETH(WNATIVE).deposit{value: uint256(msg.value).sub(fee)}(); // mint WETH
+        IWETH(WNATIVE).deposit{value: uint256(msg.value)}(); // mint WETH
         _approveTokenIfNeeded(WNATIVE, routerAddr);
         _swapTokenToLP(
             WNATIVE,
-            uint256(msg.value).sub(fee),
+            uint256(msg.value),
             _to,
             _recipient,
             routerAddr,
             path0,
             path1
         );
-        safeTransferETH(FEE_TO_ADDR, fee); // collect fee
     }
 
     /**
      * @dev Swaps from ERC20 token to an LP token via specified router.
-     * Collects a fee for each transaction. see above.
-     * Sends fee to fee collector addr
+     * Does not Stake into vault.
      * @param _from address of ERC20 token to swap.
      * @param routerAddr address of DEX router address
      * @param _recipient address of funds recipient. NB: This could be different from msg.sender.
@@ -112,9 +97,9 @@ contract Zap is Ownable {
      * @param path1 list of address that represents the swap order from ERC20 to lpToken1().
      */
     function zapInToken(
-        address _from, //from token
+        address _from,
         uint256 amount,
-        address _to, //to token
+        address _to,
         address routerAddr,
         address _recipient,
         address[] memory path0,
@@ -126,14 +111,9 @@ contract Zap is Ownable {
         // we'll need this approval to swap
         _approveTokenIfNeeded(_from, routerAddr);
 
-        // Take fee first because _swapTokenToLP will return dust
-        uint256 fee = uint256(amount).div(FEE_RATE);
-
-        IERC20(_from).safeTransfer(FEE_TO_ADDR, fee); // transfer fees to fee collector.
-
         _swapTokenToLP(
             _from,
-            amount.sub(fee),
+            amount,
             _to,
             _recipient,
             routerAddr,
@@ -147,7 +127,6 @@ contract Zap is Ownable {
      * Swaps from Native coin to an LP token via specified router.
      * Stake LP token in the vault and receive vault token.
      * Transfer vault token to msg.sender.
-     * Does not collect fee.
      * @param _to address of lpToken
      * @param routerAddr address of DEX router address
      * @param path0 list of address that represents the swap order from ONE to lpToken0().
@@ -156,41 +135,38 @@ contract Zap is Ownable {
     function zapInAndStake(
         address _to,
         address routerAddr,
-        // address _recipient, //msg.sender
         address[] memory path0,
         address[] memory path1
     ) external payable {
-        // Also stakes in vault, no fees
         require(uint256(msg.value) > MIN_AMT, "INPUT_TOO_LOW");
 
         IWETH(WNATIVE).deposit{value: uint256(msg.value)}();
         _approveTokenIfNeeded(WNATIVE, routerAddr); // approve if needed
         uint256 lps = _swapTokenToLP(
-            WNATIVE, //from token
-            uint256(msg.value), //amount
-            _to, //to LP
-            address(this), //receipient
-            routerAddr, //router addr
-            path0, //swap path
-            path1 //swap path
+            WNATIVE,
+            uint256(msg.value),
+            _to,
+            address(this),
+            routerAddr,
+            path0,
+            path1
         );
 
         _approveTokenIfNeeded(_to, vaultChefAddress); //approve token if needed
 
         IPlutusMinChefVault(vaultChefAddress).deposit(lps); // deposit lp into vault.
 
-        uint256 zapBalance = IPlutusMinChefVault(vaultChefAddress).balanceOf(
-            address(this)
-        );
         //send Plutus Sushi USDC-ONE token to msg.sender
-        IERC20(vaultChefAddress).safeTransfer(msg.sender, zapBalance);
+        IERC20(vaultChefAddress).safeTransfer(
+            msg.sender,
+            IPlutusMinChefVault(vaultChefAddress).balanceOf(address(this))
+        );
     }
 
     /**
      * @dev Swaps from ERC20 token to an LP token via specified router.
      * Stake LP token in the vault and receive vault token.
      * Transfer vault token to msg.sender.
-     * Does not collect fee.
      * requires a minimum deposit amount
      * @param _from address of ERC20
      * @param _to address of lpToken
@@ -231,7 +207,6 @@ contract Zap is Ownable {
 
     /**
      * @dev Swaps from LP token to NATIVE coin via specified router.
-     * Does not collect fee.
      * @param _from address of lpToken
      * @param routerAddr address of DEX router address
      * @param _recipient address of funds recipient. this could be different from msg.sender.
@@ -274,8 +249,7 @@ contract Zap is Ownable {
 
     /**
      * @dev Swaps from LP token to specified token via specified router.
-     * will automatically swap to ONE if WONE if provided as token
-     * Does not collect fee.
+     * Will automatically swap to Native if WONE if provided as token
      * @param _from address of lpToken
      * @param _to address of ERC20
      * @param routerAddr address of DEX router address
@@ -320,9 +294,6 @@ contract Zap is Ownable {
 
     /**
      * @dev Simple swap function between two ERC20 tokens using a scpeified router.
-     * Stake LP token in the vault and receive vault token.
-     * Transfer vault token to msg.sender.
-     * Does not collect fee.
      * @param _from address of ERC20
      * @param _to address of ERC20
      * @param routerAddr address of DEX router address
@@ -369,6 +340,9 @@ contract Zap is Ownable {
         }
     }
 
+    /**
+     * @dev Swap from ERC20 to LP constituant and add liquidity.
+     */
     function _swapTokenToLP(
         address _from,
         uint256 amount,
@@ -423,6 +397,9 @@ contract Zap is Ownable {
         return liquidity;
     }
 
+    /**
+     * @dev Implements regular swap functinality with the given router address
+     */
     function _swap(
         address _from,
         uint256 amount,
@@ -449,6 +426,9 @@ contract Zap is Ownable {
         return IERC20(path[path.length - 1]).balanceOf(address(this));
     }
 
+    /**
+     * @dev Implements swap functinality from ERC20 to native.
+     */
     function _swapTokenForNative(
         address token,
         uint256 amount,
@@ -483,7 +463,10 @@ contract Zap is Ownable {
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
-
+    /**
+     * @dev Allow owner to withdraw any remaining balance of this contract
+     * @param token if a zero address, only native will be withdrawn.
+     */
     function withdraw(address token) external onlyOwner {
         if (token == address(0)) {
             payable(owner()).transfer(address(this).balance);
@@ -493,18 +476,9 @@ contract Zap is Ownable {
         IERC20(token).transfer(owner(), IERC20(token).balanceOf(address(this)));
     }
 
-    function setFee(
-        address addr,
-        uint16 rate,
-        uint16 min
-    ) external onlyOwner {
-        require(rate >= 25, "FEE TOO HIGH; MAX FEE = 4%");
-        FEE_TO_ADDR = addr;
-        FEE_RATE = rate;
-        MIN_AMT = min;
-        emit FeeChange(addr, rate, min);
-    }
-
+    /**
+     * @dev Implements a safe method of transerring ETH between addresses.
+     */
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         require(
