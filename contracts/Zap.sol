@@ -10,11 +10,9 @@ import "./interfaces/IUniPair.sol";
 import "./interfaces/IPlutusMinChefVault.sol";
 import "./interfaces/IWETH.sol";
 
-//TODO: deploy script  with addr for each vault or use factory?
 
 /**
  * @dev one zap for each vault chef.
- *
  *
  */
 
