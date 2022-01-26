@@ -14,8 +14,6 @@ interface IPlutusMinChefVault {
 
     function balanceOf(address account) external view returns (uint256);
 
-    // function safeTransfer(address account, uint256 amount) external;
-
     function want() external view returns (IERC20);
 
     function balance() external view returns (uint256);
