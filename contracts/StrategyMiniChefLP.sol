@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -26,7 +26,7 @@ abstract contract Context {
 
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -105,7 +105,7 @@ interface IERC20 {
 
 // File @openzeppelin/contracts/math/SafeMath.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -321,7 +321,7 @@ library SafeMath {
 
 // File @openzeppelin/contracts/token/ERC20/ERC20.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 
 
@@ -626,8 +626,7 @@ contract ERC20 is Context, IERC20 {
 
 
 // File @openzeppelin/contracts/utils/Address.sol@v3.4.1
-
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity >=0.6.2 <0.7.0;
 
 /**
  * @dev Collection of functions related to the address type
@@ -817,7 +816,8 @@ library Address {
 
 
 // File @openzeppelin/contracts/token/ERC20/SafeERC20.sol@v3.4.1
-pragma solidity >=0.6.0 <0.8.0;
+
+pragma solidity >=0.6.0 <0.7.0;
 
 
 
@@ -890,9 +890,121 @@ library SafeERC20 {
 }
 
 
+// File contracts/BIFI/interfaces/common/IUniswapRouterETH.sol
+
+
+pragma solidity ^0.6.0;
+
+interface IUniswapRouterETH {
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint amountADesired,
+        uint amountBDesired,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB, uint liquidity);
+
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB);
+
+    function removeLiquidityETH(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountToken, uint amountETH);
+
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+
+    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
+    external
+    payable
+    returns (uint[] memory amounts);
+
+    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
+    external
+    returns (uint[] memory amounts);
+
+    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
+}
+
+
+// File contracts/BIFI/interfaces/common/IUniswapV2Pair.sol
+
+pragma solidity ^0.6.0;
+
+interface IUniswapV2Pair {
+    function factory() external view returns (address);
+    function token0() external view returns (address);
+    function token1() external view returns (address);
+    function burn(address to) external returns (uint amount0, uint amount1);
+    function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
+}
+
+
+// File contracts/BIFI/interfaces/sushi/IMiniChefV2.sol
+
+pragma solidity ^0.6.0;
+
+interface IMiniChefV2 {
+    function poolLength() external view returns (uint256);
+    function userInfo(uint256 _pid, address _user) external view returns (uint256, uint256);
+    function pendingSushi(uint256 _pid, address _user) external view returns (uint256);
+    function deposit(uint256 pid, uint256 amount, address to) external;
+    function withdraw(uint256 pid, uint256 amount, address to) external;
+    function harvest(uint256 pid, address to) external;
+    function withdrawAndHarvest(uint256 pid, uint256 amount, address to) external;
+    function emergencyWithdraw(uint256 pid, address to) external;
+    function rewarder(uint256 pid) external view returns (address);
+}
+
+
+// File contracts/BIFI/interfaces/sushi/IRewarder.sol
+
+pragma solidity ^0.6.0;
+
+interface IRewarder {
+    function poolLength() external view returns (uint256);
+    function userInfo(uint256 _pid, address _user) external view returns (uint256, uint256);
+    function pendingToken(uint256 _pid, address _user) external view returns (uint256);
+    function deposit(uint256 pid, uint256 amount, address to) external;
+    function withdraw(uint256 pid, uint256 amount, address to) external;
+    function harvest(uint256 pid, address to) external;
+    function withdrawAndHarvest(uint256 pid, uint256 amount, address to) external;
+    function emergencyWithdraw(uint256 pid, address to) external;
+}
+
+
 // File @openzeppelin/contracts/access/Ownable.sol@v3.4.1
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -959,94 +1071,227 @@ abstract contract Ownable is Context {
 }
 
 
-// File @openzeppelin/contracts/utils/ReentrancyGuard.sol@v3.4.1
-
-pragma solidity >=0.6.0 <0.8.0;
+// File @openzeppelin/contracts/utils/Pausable.sol@v3.4.1
+pragma solidity >=0.6.0 <0.7.0;
 
 /**
- * @dev Contract module that helps prevent reentrant calls to a function.
+ * @dev Contract module which allows children to implement an emergency stop
+ * mechanism that can be triggered by an authorized account.
  *
- * Inheriting from `ReentrancyGuard` will make the {nonReentrant} modifier
- * available, which can be applied to functions to make sure there are no nested
- * (reentrant) calls to them.
- *
- * Note that because there is a single `nonReentrant` guard, functions marked as
- * `nonReentrant` may not call one another. This can be worked around by making
- * those functions `private`, and then adding `external` `nonReentrant` entry
- * points to them.
- *
- * TIP: If you would like to learn more about reentrancy and alternative ways
- * to protect against it, check out our blog post
- * https://blog.openzeppelin.com/reentrancy-after-istanbul/[Reentrancy After Istanbul].
+ * This module is used through inheritance. It will make available the
+ * modifiers `whenNotPaused` and `whenPaused`, which can be applied to
+ * the functions of your contract. Note that they will not be pausable by
+ * simply including this module, only once the modifiers are put in place.
  */
-abstract contract ReentrancyGuard {
-    // Booleans are more expensive than uint256 or any type that takes up a full
-    // word because each write operation emits an extra SLOAD to first read the
-    // slot's contents, replace the bits taken up by the boolean, and then write
-    // back. This is the compiler's defense against contract upgrades and
-    // pointer aliasing, and it cannot be disabled.
+abstract contract Pausable is Context {
+    /**
+     * @dev Emitted when the pause is triggered by `account`.
+     */
+    event Paused(address account);
 
-    // The values being non-zero value makes deployment a bit more expensive,
-    // but in exchange the refund on every call to nonReentrant will be lower in
-    // amount. Since refunds are capped to a percentage of the total
-    // transaction's gas, it is best to keep them low in cases like this one, to
-    // increase the likelihood of the full refund coming into effect.
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
+    /**
+     * @dev Emitted when the pause is lifted by `account`.
+     */
+    event Unpaused(address account);
 
-    uint256 private _status;
+    bool private _paused;
 
+    /**
+     * @dev Initializes the contract in unpaused state.
+     */
     constructor () internal {
-        _status = _NOT_ENTERED;
+        _paused = false;
     }
 
     /**
-     * @dev Prevents a contract from calling itself, directly or indirectly.
-     * Calling a `nonReentrant` function from another `nonReentrant`
-     * function is not supported. It is possible to prevent this from happening
-     * by making the `nonReentrant` function external, and make it call a
-     * `private` function that does the actual work.
+     * @dev Returns true if the contract is paused, and false otherwise.
      */
-    modifier nonReentrant() {
-        // On the first call to nonReentrant, _notEntered will be true
-        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+    function paused() public view virtual returns (bool) {
+        return _paused;
+    }
 
-        // Any calls to nonReentrant after this point will fail
-        _status = _ENTERED;
-
+    /**
+     * @dev Modifier to make a function callable only when the contract is not paused.
+     *
+     * Requirements:
+     *
+     * - The contract must not be paused.
+     */
+    modifier whenNotPaused() {
+        require(!paused(), "Pausable: paused");
         _;
+    }
 
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        _status = _NOT_ENTERED;
+    /**
+     * @dev Modifier to make a function callable only when the contract is paused.
+     *
+     * Requirements:
+     *
+     * - The contract must be paused.
+     */
+    modifier whenPaused() {
+        require(paused(), "Pausable: not paused");
+        _;
+    }
+
+    /**
+     * @dev Triggers stopped state.
+     *
+     * Requirements:
+     *
+     * - The contract must not be paused.
+     */
+    function _pause() internal virtual whenNotPaused {
+        _paused = true;
+        emit Paused(_msgSender());
+    }
+
+    /**
+     * @dev Returns to normal state.
+     *
+     * Requirements:
+     *
+     * - The contract must be paused.
+     */
+    function _unpause() internal virtual whenPaused {
+        _paused = false;
+        emit Unpaused(_msgSender());
     }
 }
 
 
-// File contracts/BIFI/interfaces/beefy/IStrategy.sol
+// File contracts/BIFI/strategies/Common/StratManager.sol
 
-pragma solidity ^0.6.0;
 
-interface IStrategy {
-    function vault() external view returns (address);
-    function want() external view returns (IERC20);
-    function beforeDeposit() external;
-    function deposit() external;
-    function withdraw(uint256) external;
-    function balanceOf() external view returns (uint256);
-    function balanceOfWant() external view returns (uint256);
-    function balanceOfPool() external view returns (uint256);
-    function harvest() external;
-    function retireStrat() external;
-    function panic() external;
-    function pause() external;
-    function unpause() external;
-    function paused() external view returns (bool);
-    function unirouter() external view returns (address);
+pragma solidity ^0.6.12;
+
+
+contract StratManager is Ownable, Pausable {
+    /**
+     * @dev Beefy Contracts:
+     * {keeper} - Address to manage a few lower risk features of the strat
+     * {strategist} - Address of the strategy author/deployer where strategist fee will go.
+     * {vault} - Address of the vault that controls the strategy's funds.
+     * {unirouter} - Address of exchange to execute swaps.
+     */
+    address public keeper;
+    address public strategist;
+    address public unirouter;
+    address public vault;
+    address public beefyFeeRecipient;
+
+    /**
+     * @dev Initializes the base strategy.
+     * @param _keeper address to use as alternative owner.
+     * @param _strategist address where strategist fees go.
+     * @param _unirouter router to use for swaps
+     * @param _vault address of parent vault.
+     * @param _beefyFeeRecipient address where to send Beefy's fees.
+     */
+    constructor(
+        address _keeper,
+        address _strategist,
+        address _unirouter,
+        address _vault,
+        address _beefyFeeRecipient
+    ) public {
+        keeper = _keeper;
+        strategist = _strategist;
+        unirouter = _unirouter;
+        vault = _vault;
+        beefyFeeRecipient = _beefyFeeRecipient;
+    }
+
+    // checks that caller is either owner or keeper.
+    modifier onlyManager() {
+        require(msg.sender == owner() || msg.sender == keeper, "!manager");
+        _;
+    }
+
+    // verifies that the caller is not a contract.
+    modifier onlyEOA() {
+        require(msg.sender == tx.origin, "!EOA");
+        _;
+    }
+
+    /**
+     * @dev Updates address of the strat keeper.
+     * @param _keeper new keeper address.
+     */
+    function setKeeper(address _keeper) external onlyManager {
+        keeper = _keeper;
+    }
+
+    /**
+     * @dev Updates address where strategist fee earnings will go.
+     * @param _strategist new strategist address.
+     */
+    function setStrategist(address _strategist) external {
+        require(msg.sender == strategist, "!strategist");
+        strategist = _strategist;
+    }
+
+    /**
+     * @dev Updates router that will be used for swaps.
+     * @param _unirouter new unirouter address.
+     */
+    function setUnirouter(address _unirouter) external onlyOwner {
+        unirouter = _unirouter;
+    }
+
+    /**
+     * @dev Updates parent vault.
+     * @param _vault new vault address.
+     */
+    function setVault(address _vault) external onlyOwner {
+        vault = _vault;
+    }
+
+    /**
+     * @dev Updates beefy fee recipient.
+     * @param _beefyFeeRecipient new beefy fee recipient address.
+     */
+    function setBeefyFeeRecipient(address _beefyFeeRecipient) external onlyOwner {
+        beefyFeeRecipient = _beefyFeeRecipient;
+    }
+
+    /**
+     * @dev Function to synchronize balances before new user deposit.
+     * Can be overridden in the strategy.
+     */
+    function beforeDeposit() external virtual {}
 }
 
 
-// File contracts/BIFI/vaults/BeefyVaultV6.sol
+// File contracts/BIFI/strategies/Common/FeeManager.sol
+
+
+pragma solidity ^0.6.12;
+
+abstract contract FeeManager is StratManager {
+    uint constant public STRATEGIST_FEE = 112;
+    uint constant public MAX_FEE = 1000;
+    uint constant public MAX_CALL_FEE = 111;
+
+    uint public performanceFee = 25;
+
+    uint public callFee = 111;
+    uint public beefyFee = MAX_FEE - STRATEGIST_FEE - callFee;
+
+    function setCallFee(uint256 _fee) public onlyManager {
+        require(_fee <= MAX_CALL_FEE, "!cap");
+        callFee = _fee;
+        beefyFee = MAX_FEE - STRATEGIST_FEE - callFee;
+    }
+
+    function setPerformanceFee(uint256 _fee) public onlyManager {
+        require(_fee <= 50, "!cap");
+        performanceFee = _fee;
+    }
+}
+
+
+// File contracts/BIFI/strategies/Common/StrategyMiniChefLP.sol
 
 pragma solidity ^0.6.0;
 
@@ -1054,194 +1299,274 @@ pragma solidity ^0.6.0;
 
 
 
-/**
- * @dev Implementation of a vault to deposit funds for yield optimizing.
- * This is the contract that receives funds and that users interface with.
- * The yield optimizing strategy itself is implemented in a separate 'Strategy.sol' contract.
- */
-contract PlutusMinChefVault is ERC20, Ownable, ReentrancyGuard {
+
+
+
+contract StrategyMiniChefLP is StratManager, FeeManager {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    struct StratCandidate {
-        address implementation;
-        uint proposedTime;
-    }
+    // Tokens used
+    address public native;
+    address public output;
+    address public want;
+    address public lpToken0;
+    address public lpToken1;
 
-    // The last proposed strategy to switch to.
-    StratCandidate public stratCandidate;
-    // The strategy currently in use by the vault.
-    IStrategy public strategy;
-    // The minimum time it has to pass before a strat candidate can be approved.
-    uint256 public immutable approvalDelay;
+    // Third party contracts
+    address public chef;
+    uint256 public poolId;
 
-    event NewStratCandidate(address implementation);
-    event UpgradeStrat(address implementation);
+    uint256 public lastHarvest;
+    bool public harvestOnDeposit;
 
-    /**
-     * @dev Sets the value of {token} to the token that the vault will
-     * hold as underlying value. It initializes the vault's own 'moo' token.
-     * This token is minted when someone does a deposit. It is burned in order
-     * to withdraw the corresponding portion of the underlying assets.
-     * @param _strategy the address of the strategy.
-     * @param _name the name of the vault token.
-     * @param _symbol the symbol of the vault token.
-     * @param _approvalDelay the delay before a new strat can be approved.
-     */
-    constructor (
-        IStrategy _strategy, // 0x61fc9316D5Cd856ECf15064E922a014D2d690494
-        string memory _name, // Plutus Sushi WBTC-ETH
-        string memory _symbol, // pSushiWBTC-ETH
-        uint256 _approvalDelay // 21600
-    ) public ERC20(
-        _name,
-        _symbol
-    ) {
-        strategy = _strategy;
-        approvalDelay = _approvalDelay;
-    }
-
-    function want() public view returns (IERC20) {
-        return IERC20(strategy.want());
-    }
+    // Routes
+    address[] public outputToNativeRoute;
+    address[] public nativeToOutputRoute;
+    address[] public outputToLp0Route;
+    address[] public outputToLp1Route;
 
     /**
-     * @dev It calculates the total underlying value of {token} held by the system.
-     * It takes into account the vault contract balance, the strategy contract balance
-     *  and the balance deployed in other contracts as part of the strategy.
+     * @dev Event that is fired each time someone harvests the strat.
      */
-    function balance() public view returns (uint) {
-        return want().balanceOf(address(this)).add(IStrategy(strategy).balanceOf());
-    }
+    event StratHarvest(address indexed harvester, uint256 outputBal);
+    event StratSwap(uint256 outputHalf, uint256 lp0Bal, uint256 lp1Bal);
 
-    /**
-     * @dev Custom logic in here for how much the vault allows to be borrowed.
-     * We return 100% of tokens for now. Under certain conditions we might
-     * want to keep some of the system funds at hand in the vault, instead
-     * of putting them to work.
-     */
-    function available() public view returns (uint256) {
-        return want().balanceOf(address(this));
-    }
+    constructor(
+        address _want, // 0x39bE7c95276954a6f7070F9BAa38db2123691Ed0
+        uint256 _poolId, // 10
+        address _chef, // 0x67dA5f2FfaDDfF067AB9d5F025F8810634d84287
+        address _vault, // 0x8B1Ca7f3F0838dCd23DA8CFe223eA313739193cb
+        address _unirouter, // 0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506
+        address _keeper, // 0x80956dcf2a4302176b0ce0c0b4fce71081b1d6a7
+        address _strategist, // 0x010dA5FF62B6e45f89FA7B2d8CEd5a8b5754eC1b
+        address _beefyFeeRecipient, // 0x7cef2432A2690168Fb8eb7118A74d5f8EfF9Ef55
+        address[] memory _outputToNativeRoute, // ["0xBEC775Cb42AbFa4288dE81F387a9b1A3c4Bc552A","0xcF664087a5bB0237a0BAd6742852ec6c8d69A27a"]
+        address[] memory _outputToLp0Route, // ["0xBEC775Cb42AbFa4288dE81F387a9b1A3c4Bc552A","0xcF664087a5bB0237a0BAd6742852ec6c8d69A27a","0x3095c7557bCb296ccc6e363DE01b760bA031F2d9"]
+        address[] memory _outputToLp1Route // ["0xBEC775Cb42AbFa4288dE81F387a9b1A3c4Bc552A","0xcF664087a5bB0237a0BAd6742852ec6c8d69A27a","0x6983D1E6DEf3690C4d616b13597A09e6193EA013"]
+    ) StratManager(_keeper, _strategist, _unirouter, _vault, _beefyFeeRecipient) public {
+        want = _want;
+        poolId = _poolId;
+        chef = _chef;
 
-    /**
-     * @dev Function for various UIs to display the current value of one of our yield tokens.
-     * Returns an uint256 with 18 decimals of how much underlying asset one vault share represents.
-     */
-    function getPricePerFullShare() public view returns (uint256) {
-        return totalSupply() == 0 ? 1e18 : balance().mul(1e18).div(totalSupply());
-    }
+        require(_outputToNativeRoute.length >= 2);
+        output = _outputToNativeRoute[0];
+        native = _outputToNativeRoute[_outputToNativeRoute.length - 1];
+        outputToNativeRoute = _outputToNativeRoute;
 
-    /**
-     * @dev A helper function to call deposit() with all the sender's funds.
-     */
-    function depositAll() external {
-        deposit(want().balanceOf(msg.sender));
-    }
+        // setup lp routing
+        lpToken0 = IUniswapV2Pair(want).token0();
+        require(_outputToLp0Route[0] == output);
+        require(_outputToLp0Route[_outputToLp0Route.length - 1] == lpToken0);
+        outputToLp0Route = _outputToLp0Route;
 
-    /**
-     * @dev The entrypoint of funds into the system. People deposit with this function
-     * into the vault. The vault is then in charge of sending funds into the strategy.
-     */
-    function deposit(uint _amount) public nonReentrant {
-        strategy.beforeDeposit();
+        lpToken1 = IUniswapV2Pair(want).token1();
+        require(_outputToLp1Route[0] == output);
+        require(_outputToLp1Route[_outputToLp1Route.length - 1] == lpToken1);
+        outputToLp1Route = _outputToLp1Route;
 
-        uint256 _pool = balance();
-        want().safeTransferFrom(msg.sender, address(this), _amount);
-        earn();
-        uint256 _after = balance();
-        _amount = _after.sub(_pool); // Additional check for deflationary tokens
-        uint256 shares = 0;
-        if (totalSupply() == 0) {
-            shares = _amount;
-        } else {
-            shares = (_amount.mul(totalSupply())).div(_pool);
-        }
-        _mint(msg.sender, shares);
-    }
-
-    /**
-     * @dev Function to send funds into the strategy and put them to work. It's primarily called
-     * by the vault's deposit() function.
-     */
-    function earn() public {
-        uint _bal = available();
-        want().safeTransfer(address(strategy), _bal);
-        strategy.deposit();
-    }
-
-    /**
-     * @dev A helper function to call withdraw() with all the sender's funds.
-     */
-    function withdrawAll() external {
-        withdraw(balanceOf(msg.sender));
-    }
-
-    /**
-     * @dev Function to exit the system. The vault will withdraw the required tokens
-     * from the strategy and pay up the token holder. A proportional number of IOU
-     * tokens are burned in the process.
-     */
-    function withdraw(uint256 _shares) public {
-        uint256 r = (balance().mul(_shares)).div(totalSupply());
-        _burn(msg.sender, _shares);
-
-        uint b = want().balanceOf(address(this));
-        if (b < r) {
-            uint _withdraw = r.sub(b);
-            strategy.withdraw(_withdraw);
-            uint _after = want().balanceOf(address(this));
-            uint _diff = _after.sub(b);
-            if (_diff < _withdraw) {
-                r = b.add(_diff);
-            }
+        nativeToOutputRoute = new address[](_outputToNativeRoute.length);
+        for (uint i = 0; i < _outputToNativeRoute.length; i++) {
+            uint idx = _outputToNativeRoute.length - 1 - i;
+            nativeToOutputRoute[i] = outputToNativeRoute[idx];
         }
 
-        want().safeTransfer(msg.sender, r);
+        _giveAllowances();
     }
 
-    /**
-     * @dev Sets the candidate for the new strat to use with this vault.
-     * @param _implementation The address of the candidate strategy.
-     */
-    function proposeStrat(address _implementation) public onlyOwner {
-        require(address(this) == IStrategy(_implementation).vault(), "Proposal not valid for this Vault");
-        stratCandidate = StratCandidate({
-        implementation: _implementation,
-        proposedTime: block.timestamp
-        });
+    // puts the funds to work
+    function deposit() public whenNotPaused {
+        uint256 wantBal = IERC20(want).balanceOf(address(this));
 
-        emit NewStratCandidate(_implementation);
+        if (wantBal > 0) {
+            IMiniChefV2(chef).deposit(poolId, wantBal, address(this));
+        }
     }
 
-    /**
-     * @dev It switches the active strat for the strat candidate. After upgrading, the
-     * candidate implementation is set to the 0x00 address, and proposedTime to a time
-     * happening in +100 years for safety.
-     */
+    function withdraw(uint256 _amount) external {
+        require(msg.sender == vault, "!vault");
 
-    function upgradeStrat() public onlyOwner {
-        require(stratCandidate.implementation != address(0), "There is no candidate");
-        require(stratCandidate.proposedTime.add(approvalDelay) < block.timestamp, "Delay has not passed");
+        uint256 wantBal = IERC20(want).balanceOf(address(this));
 
-        emit UpgradeStrat(stratCandidate.implementation);
+        if (wantBal < _amount) {
+            IMiniChefV2(chef).withdraw(poolId, _amount.sub(wantBal), address(this));
+            wantBal = IERC20(want).balanceOf(address(this));
+        }
 
-        strategy.retireStrat();
-        strategy = IStrategy(stratCandidate.implementation);
-        stratCandidate.implementation = address(0);
-        stratCandidate.proposedTime = 5000000000;
+        if (wantBal > _amount) {
+            wantBal = _amount;
+        }
 
-        earn();
+        IERC20(want).safeTransfer(vault, wantBal);
     }
 
-    /**
-     * @dev Rescues random funds stuck that the strat can't handle.
-     * @param _token address of the token to rescue.
-     */
-    function inCaseTokensGetStuck(address _token) external onlyOwner {
-        require(_token != address(want()), "!token");
+    function beforeDeposit() external override {
+        if (harvestOnDeposit) {
+            require(msg.sender == vault, "!vault");
+            _harvest();
+        }
+    }
 
-        uint256 amount = IERC20(_token).balanceOf(address(this));
-        IERC20(_token).safeTransfer(msg.sender, amount);
+    function harvest() external virtual whenNotPaused {
+        _harvest();
+    }
+
+    function managerHarvest() external onlyManager {
+        _harvest();
+    }
+
+    // compounds earnings and charges performance fee
+    function _harvest() internal {
+        IMiniChefV2(chef).harvest(poolId, address(this));
+
+        uint256 outputBal = IERC20(output).balanceOf(address(this));
+        if (outputBal > 0) {
+            chargeFees();
+            addLiquidity();
+            deposit();
+        }
+
+        lastHarvest = block.timestamp;
+        emit StratHarvest(msg.sender, outputBal);
+    }
+
+    // performance fees
+    function chargeFees() internal {
+        // v2 harvester rewards are in both output and native, convert native to output
+        uint256 toOutput = IERC20(native).balanceOf(address(this));
+        if (toOutput > 0) {
+            IUniswapRouterETH(unirouter).swapExactTokensForTokens(toOutput, 0, nativeToOutputRoute, address(this), block.timestamp);
+        }
+
+        uint256 toNative = IERC20(output).balanceOf(address(this)).mul(performanceFee).div(MAX_FEE);
+        IUniswapRouterETH(unirouter).swapExactTokensForTokens(toNative, 0, outputToNativeRoute, address(this), block.timestamp);
+
+        uint256 nativeBal = IERC20(native).balanceOf(address(this));
+
+        uint256 callFeeAmount = nativeBal.mul(callFee).div(MAX_FEE);
+        IERC20(native).safeTransfer(msg.sender, callFeeAmount);
+
+        uint256 beefyFeeAmount = nativeBal.mul(beefyFee).div(MAX_FEE);
+        IERC20(native).safeTransfer(beefyFeeRecipient, beefyFeeAmount);
+
+        uint256 strategistFee = nativeBal.mul(STRATEGIST_FEE).div(MAX_FEE);
+        IERC20(native).safeTransfer(strategist, strategistFee);
+    }
+
+    // Adds liquidity to AMM and gets more LP tokens.
+    function addLiquidity() internal {
+        uint256 outputHalf = IERC20(output).balanceOf(address(this)).div(2);
+
+        if (lpToken0 != output && outputHalf > 0 ) {
+            IUniswapRouterETH(unirouter).swapExactTokensForTokens(outputHalf, 0, outputToLp0Route, address(this), block.timestamp);
+        }
+
+        if (lpToken1 != output && outputHalf > 0) {
+            IUniswapRouterETH(unirouter).swapExactTokensForTokens(outputHalf, 0, outputToLp1Route, address(this), block.timestamp);
+        }
+
+        uint256 lp0Bal = IERC20(lpToken0).balanceOf(address(this));
+        uint256 lp1Bal = IERC20(lpToken1).balanceOf(address(this));
+        if( lp0Bal > 0 && lp1Bal > 0 ){
+            IUniswapRouterETH(unirouter).addLiquidity(lpToken0, lpToken1, lp0Bal, lp1Bal, 1, 1, address(this), block.timestamp);
+        }
+        emit StratSwap(outputHalf, lp0Bal, lp1Bal);
+    }
+
+    // calculate the total underlaying 'want' held by the strat.
+    function balanceOf() public view returns (uint256) {
+        return balanceOfWant().add(balanceOfPool());
+    }
+
+    // it calculates how much 'want' this contract holds.
+    function balanceOfWant() public view returns (uint256) {
+        return IERC20(want).balanceOf(address(this));
+    }
+
+    // it calculates how much 'want' the strategy has working in the farm.
+    function balanceOfPool() public view returns (uint256) {
+        (uint256 _amount, ) = IMiniChefV2(chef).userInfo(poolId, address(this));
+        return _amount;
+    }
+
+    // called as part of strat migration. Sends all the available funds back to the vault.
+    function retireStrat() external {
+        require(msg.sender == vault, "!vault");
+
+        IMiniChefV2(chef).emergencyWithdraw(poolId, address(this));
+
+        uint256 wantBal = IERC20(want).balanceOf(address(this));
+        IERC20(want).transfer(vault, wantBal);
+    }
+
+    // returns rewards unharvested
+    function rewardsAvailable() public view returns (uint256) {
+        return IMiniChefV2(chef).pendingSushi(poolId, address(this));
+    }
+
+    // native reward amount for calling harvest
+    function callReward() public view returns (uint256) {
+        uint256 outputBal = rewardsAvailable();
+        uint256[] memory amountOut = IUniswapRouterETH(unirouter).getAmountsOut(outputBal, outputToNativeRoute);
+        uint256 nativeOut = amountOut[amountOut.length -1];
+
+        uint256 pendingNative;
+        address rewarder = IMiniChefV2(chef).rewarder(poolId);
+        if (rewarder != address(0)) {
+            pendingNative = IRewarder(rewarder).pendingToken(poolId, address(this));
+        }
+
+        return pendingNative.add(nativeOut).mul(performanceFee).div(1000).mul(callFee).div(MAX_FEE);
+    }
+
+    // function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyManager {
+    //     harvestOnDeposit = _harvestOnDeposit;
+
+    //     if (harvestOnDeposit) {
+    //         setWithdrawalFee(0);
+    //     } else {
+    //         setWithdrawalFee(10);
+    //     }
+    // }
+
+    // pauses deposits and withdraws all funds from third party systems.
+    function panic() public onlyManager {
+        pause();
+        IMiniChefV2(chef).emergencyWithdraw(poolId, address(this));
+    }
+
+    function pause() public onlyManager {
+        _pause();
+
+        _removeAllowances();
+    }
+
+    function unpause() external onlyManager {
+        _unpause();
+
+        _giveAllowances();
+
+        deposit();
+    }
+
+    function _giveAllowances() internal {
+        IERC20(want).safeApprove(chef, type(uint256).max);
+        IERC20(output).safeApprove(unirouter, type(uint256).max);
+        // needed for v2 harvester
+        IERC20(native).safeApprove(unirouter, type(uint256).max);
+
+        IERC20(lpToken0).safeApprove(unirouter, 0);
+        IERC20(lpToken0).safeApprove(unirouter, type(uint256).max);
+
+        IERC20(lpToken1).safeApprove(unirouter, 0);
+        IERC20(lpToken1).safeApprove(unirouter, type(uint256).max);
+    }
+
+    function _removeAllowances() internal {
+        IERC20(want).safeApprove(chef, 0);
+        IERC20(output).safeApprove(unirouter, 0);
+        IERC20(native).safeApprove(unirouter, 0);
+        IERC20(lpToken0).safeApprove(unirouter, 0);
+        IERC20(lpToken1).safeApprove(unirouter, 0);
     }
 }

@@ -1,0 +1,29 @@
+{
+  "name": "Harmonyvaultsv2",
+  "version": "1.0.0",
+  "description": "Hermes Vaults",
+  "main": "index.js",
+  "repository": "git@github.com:Hermes-defi/Harmonyvaultsv2.git",
+  "license": "MIT",
+  "scripts": {
+    "start": "ganache-cli --fork https://a.api.s0.t.hmny.io",
+    "test-zap": "truffle test test/zap.js",
+    "compile": "truffle compile",
+    "deploy-mainnet":"truffle migrate --reset --network harmony",
+    "deploy-testnet":"truffle migrate --reset --network harmonyTestnet"
+  },
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.15",
+    "@truffle/hdwallet-provider": "^2.0.1",
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "chai-bn": "^0.3.0",
+    "dotenv": "^14.2.0",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.5.3",
+    "truffle-flattener": "^1.5.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.1"
+  }
+}
