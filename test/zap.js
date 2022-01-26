@@ -24,7 +24,7 @@ const PLUTUSADDRESS = "0xd32858211fcefd0be0dd3fd6d069c3e821e0aef3";
 const FancyToken = artifacts.require("FancyToken");
 const ZapContract = artifacts.require("Zap");
 
-contract("Zap", ([deployer, alice, bob, feeCollector, devTeam]) => {
+contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
   let nativeCoin;
   let plutusVaultToken;
   let plutusToken;
@@ -40,7 +40,7 @@ contract("Zap", ([deployer, alice, bob, feeCollector, devTeam]) => {
     lpToken = await IUNIPAIR.at(LPTOKENADDR);
 
     // deploy zap
-    this.zap = await ZapContract.new(WNATIVEADDRESS, VAULTCHEF, { from: deployer });
+    this.zap = await ZapContract.new(WNATIVEADDRESS, VAULTCHEF, manager, { from: deployer });
 
     // create fancy ERC20 token
     this.fancyToken = await FancyToken.new({ from: deployer });
@@ -73,6 +73,22 @@ contract("Zap", ([deployer, alice, bob, feeCollector, devTeam]) => {
       const balance = await this.fancyToken.balanceOf(alice);
       expect(balance).to.be.a.bignumber.that.is.equal('100000');
     });
+  });
+
+  describe("Ownership", async () => {
+    it("Manager should be onwer", async () => {
+      const currentOwner = await this.zap.owner();
+      assert.equal(currentOwner, manager)
+    });
+    it("Should not transfer ownership", async () => {
+      await expectRevert(this.zap.transferOwnership(devTeam, { from: deployer }), "Ownable: caller is not the owner");
+    });
+    it("Should transfer ownership", async () => {
+      await this.zap.transferOwnership(devTeam, { from: manager });
+      const newOnwer = await this.zap.owner();
+      assert.equal(newOnwer, devTeam);
+    });
+
   });
 
   describe("ZapIn()", async () => {
@@ -333,17 +349,7 @@ contract("Zap", ([deployer, alice, bob, feeCollector, devTeam]) => {
 
   });
 
-  describe("Ownership", async () => {
-    it("Should not transfer ownership", async () => {
-      await expectRevert(this.zap.transferOwnership(devTeam, { from: alice }), "Ownable: caller is not the owner");
-    });
-    it("Should transfer ownership", async () => {
-      await this.zap.transferOwnership(devTeam, { from: deployer });
-      const newOnwer = await this.zap.owner();
-      assert.equal(newOnwer, devTeam);
-    });
 
-  });
 
 });
 

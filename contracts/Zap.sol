@@ -44,10 +44,12 @@ contract Zap is Ownable {
     /**
      * @dev requires a WONE addr; vault chef addr;
      */
-    constructor(address _WNATIVE, address _vaultChefAddress) public Ownable() {
+    constructor(address _WNATIVE, address _vaultChefAddress, address _newOwner) public Ownable() {
         WNATIVE = _WNATIVE;
         vaultChefAddress = _vaultChefAddress;
         MIN_AMT = 1000;
+        transferOwnership(_newOwner);
+
     }
 
     /* ========== External Functions ========== */
