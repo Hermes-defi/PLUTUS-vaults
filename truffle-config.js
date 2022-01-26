@@ -71,6 +71,11 @@ module.exports = {
       network_id: 1666600000,  // Harmony's id
       skipDryRun: true         // Skip dry run before migrations? (default: false for public nets )
     },
+    harmonyTestnet: {
+      provider: () => new HDWalletProvider(privateKeys, process.env.HARMONY_TESTNET_RPC_URL),
+      network_id: 1666700000,  // Harmony's testnet id
+      skipDryRun: true         // Skip dry run before migrations? (default: false for public nets )
+    },
 
     // Useful for private networks
     // private: {

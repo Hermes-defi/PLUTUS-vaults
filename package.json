@@ -8,7 +8,9 @@
   "scripts": {
     "start": "ganache-cli --fork https://a.api.s0.t.hmny.io",
     "test-zap": "truffle test test/zap.js",
-    "compile": "truffle compile"
+    "compile": "truffle compile",
+    "deploy-mainnet":"truffle migrate --reset --network harmony",
+    "deploy-testnet":"truffle migrate --reset --network harmonyTestnet"
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.15",
@@ -22,6 +24,6 @@
     "truffle-flattener": "^1.5.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.1.0"
+    "@openzeppelin/contracts": "^3.4.1"
   }
 }
