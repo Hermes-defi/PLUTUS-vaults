@@ -10,7 +10,6 @@ import "./interfaces/IUniPair.sol";
 import "./interfaces/IPlutusMinChefVault.sol";
 import "./interfaces/IWETH.sol";
 
-
 /**
  * @dev one zap for each vault chef.
  *
@@ -37,17 +36,18 @@ contract Zap is Ownable {
     mapping(address => mapping(address => address))
         private tokenBridgeForRouter;
 
-    mapping(address => bool) public useNativeRouter;
-
     /**
      * @dev requires a WONE addr; vault chef addr;
      */
-    constructor(address _WNATIVE, address _vaultChefAddress, address _newOwner) public Ownable() {
+    constructor(
+        address _WNATIVE,
+        address _vaultChefAddress,
+        address _newOwner
+    ) public Ownable() {
         WNATIVE = _WNATIVE;
         vaultChefAddress = _vaultChefAddress;
         MIN_AMT = 1000;
         transferOwnership(_newOwner);
-
     }
 
     /* ========== External Functions ========== */
