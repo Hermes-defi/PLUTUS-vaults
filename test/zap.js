@@ -13,19 +13,27 @@ const IERC20 = artifacts.require("IERC20");
 const IPLUTUSMINCHEFVAULT = artifacts.require("../interfaces/IPlutusMinChefVault.sol");
 const IUNIPAIR = artifacts.require("../interfaces/IUniPair.sol");
 
+// constant parameters ---- these parameters are not to be changed when testing new zap/vaults
 const WNATIVEADDRESS = "0xcF664087a5bB0237a0BAd6742852ec6c8d69A27a";
-const VAULTCHEF = "0xdc01ac238a0f841a7750f456bfcf1ede486ce7a1";
-
-const LPTOKENADDR = "0xbf255d8c30dbab84ea42110ea7dc870f01c0013a";
-const ROUTERADDRESS = "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506";
+const ROUTERADDRESS = "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506"; // sushiswap router address
 const PLUTUSADDRESS = "0xd32858211fcefd0be0dd3fd6d069c3e821e0aef3";
 
+// variable param ---- Change these to test new cases.
+const VAULTCHEF = "0x5F9B115EC050807F5880bE1f68dB5caA559d8456";// address of vault 
+const EXPECTEDVAULTNAME = "Plutus Sushi FRAX-ETH";// vault accounting token name
+const LPTOKENADDR = "0xa46BBA980512E328E344Ce12BB969563f3429F05";// lp token wanted by the vault
 
 const FancyToken = artifacts.require("FancyToken");
 const ZapContract = artifacts.require("Zap");
 
+function toWei(v) {
+  return web3.utils.toWei(v).toString();
+}
+const AMOUNTIN = toWei('10');
+const FANCYAMOUNT = toWei('5');
+
 contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
-  let nativeCoin;
+  let wrappedNativeCoin;
   let plutusVaultToken;
   let plutusToken;
   let lpToken;
@@ -35,7 +43,7 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
 
   beforeEach("deploy contracts", async () => {
     // fetch deployed contracts
-    nativeCoin = await IWETH.at(WNATIVEADDRESS);
+    wrappedNativeCoin = await IWETH.at(WNATIVEADDRESS);
     plutusVaultToken = await IPLUTUSMINCHEFVAULT.at(VAULTCHEF);
     lpToken = await IUNIPAIR.at(LPTOKENADDR);
 
@@ -52,26 +60,26 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
     liqToken = await IERC20.at(LPTOKENADDR);
 
     // transfer amount to alice.
-    await this.fancyToken.transfer(alice, "100000", { from: deployer });
+    await this.fancyToken.transfer(alice, FANCYAMOUNT, { from: deployer });
 
   });
 
   describe("Check for proper deployment", async () => {
     it("WNative should be wrapped one", async () => {
       assert.equal((await this.zap.WNATIVE()).toString(), WNATIVEADDRESS);
-      assert.equal(await nativeCoin.name(), "Wrapped ONE");
+      assert.equal(await wrappedNativeCoin.name(), "Wrapped ONE");
     });
     it("Plutus vault chef should be deployed", async () => {
       const name = await plutusVaultToken.name();
-      assert.equal(name, "Plutus Sushi USDC-ONE");
+      assert.equal(name, EXPECTEDVAULTNAME);
     });
     it("Plutus vault chef should be deployed", async () => {
       const vaultWant = await this.zap.getWantForVault();
-      assert.equal(vaultWant.toString().toLowerCase(), LPTOKENADDR);
+      assert.equal(vaultWant.toString().toLowerCase(), LPTOKENADDR.toLowerCase());
     });
     it("alice should have a fancy token balance.", async () => {
       const balance = await this.fancyToken.balanceOf(alice);
-      expect(balance).to.be.a.bignumber.that.is.equal('100000');
+      expect(balance).to.be.a.bignumber.that.is.equal(FANCYAMOUNT);
     });
   });
 
@@ -172,19 +180,19 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
 
     before("Complete transaction", async () => {
       // alice get WONE
-      await nativeCoin.deposit({ from: alice, value: "500000000000000000" });
+      await wrappedNativeCoin.deposit({ from: alice, value: AMOUNTIN });
 
       // get lpToken0 balance before ZapInTokenAndStake()
-      aliceWONEBalPrev = await nativeCoin.balanceOf(alice);
+      aliceWONEBalPrev = await wrappedNativeCoin.balanceOf(alice);
       aliceLPBalPrev = await lpToken.balanceOf(alice);
     });
 
     it("alice should have a greater lp token balance.", async () => {
       // approve zap to use WONE from alice
-      await nativeCoin.approve(this.zap.address, '100000000000000', { from: alice });
+      await wrappedNativeCoin.approve(this.zap.address, AMOUNTIN, { from: alice });
 
       // zapInToken()
-      await this.zap.zapInToken(nativeCoin.address, '100000000000000', LPTOKENADDR, ROUTERADDRESS, alice, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice });
+      await this.zap.zapInToken(wrappedNativeCoin.address, AMOUNTIN, LPTOKENADDR, ROUTERADDRESS, alice, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice });
 
       // expect alice to have increased lpToken balance.
       const aliceLPBal = await lpToken.balanceOf(alice);
@@ -195,9 +203,9 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
   describe("ZapInTokenAndStake()", async () => {
 
     before("Complete transaction", async () => {
-      await nativeCoin.deposit({ from: alice, value: "500000000000000000" });
+      await wrappedNativeCoin.deposit({ from: alice, value: AMOUNTIN });
 
-      aliceWONEBalPrev = await nativeCoin.balanceOf(alice);
+      aliceWONEBalPrev = await wrappedNativeCoin.balanceOf(alice);
       alicePlutusVaultBalPrev = await plutusVaultToken.balanceOf(alice);
       zapPlutusVaultBalPrev = await plutusVaultToken.balanceOf(this.zap.address);
 
@@ -206,26 +214,26 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
     it("TX should revert because no permission was given to contract", async () => {
       //expect to revert because no approval was given to zap contract.
       await expectRevert(
-        this.zap.zapInTokenAndStake(this.fancyToken.address, '10000', LPTOKENADDR, ROUTERADDRESS, [this.fancyToken.address, lpToken0.address], [this.fancyToken.address, lpToken1.address], { from: alice }),
+        this.zap.zapInTokenAndStake(this.fancyToken.address, FANCYAMOUNT, LPTOKENADDR, ROUTERADDRESS, [this.fancyToken.address, lpToken0.address], [this.fancyToken.address, lpToken1.address], { from: alice }),
         'ERC20: transfer amount exceeds allowance',
       );
     });
 
     it("TX should revert due to no liquidity", async () => {
-      await this.fancyToken.approve(this.zap.address, '10000', { from: alice });
+      await this.fancyToken.approve(this.zap.address, FANCYAMOUNT, { from: alice });
       // expect Tx to revert because lp has no liquidity
       await expectRevert(
-        this.zap.zapInTokenAndStake(this.fancyToken.address, '10000', LPTOKENADDR, ROUTERADDRESS, [this.fancyToken.address, lpToken0.address], [this.fancyToken.address, lpToken1.address], { from: alice }),
+        this.zap.zapInTokenAndStake(this.fancyToken.address, FANCYAMOUNT, LPTOKENADDR, ROUTERADDRESS, [this.fancyToken.address, lpToken0.address], [this.fancyToken.address, lpToken1.address], { from: alice }),
         'revert',
       );
     });
 
     it("Alice should have plutus vault token balance.", async () => {
       // approve zap spending of WONE.
-      await nativeCoin.approve(this.zap.address, '100000000000000', { from: alice });
+      await wrappedNativeCoin.approve(this.zap.address, AMOUNTIN, { from: alice });
 
       // zapInTokenAndStake()
-      await this.zap.zapInTokenAndStake(WNATIVEADDRESS, '100000000000000', LPTOKENADDR, ROUTERADDRESS, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice });
+      await this.zap.zapInTokenAndStake(WNATIVEADDRESS, AMOUNTIN, LPTOKENADDR, ROUTERADDRESS, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice });
 
       // get balances after zap & stake
       alicePlutusVaultBal = await plutusVaultToken.balanceOf(alice);
@@ -248,7 +256,7 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
 
     before("Complete transaction", async () => {
       // use zap in to get lp token.
-      await this.zap.zapIn(LPTOKENADDR, ROUTERADDRESS, alice, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice, value: "500000000000000000" });
+      await this.zap.zapIn(LPTOKENADDR, ROUTERADDRESS, alice, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice, value: AMOUNTIN });
 
       // get ETH balance
       alice1afterZapIn = await web3.eth.getBalance(alice);
@@ -296,13 +304,13 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
 
     beforeEach("Complete transaction", async () => {
       // use zap in to get lp token.
-      await this.zap.zapIn(LPTOKENADDR, ROUTERADDRESS, alice, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice, value: "500000000000000000" });
+      await this.zap.zapIn(LPTOKENADDR, ROUTERADDRESS, alice, [WNATIVEADDRESS, lpToken0.address], [WNATIVEADDRESS, lpToken1.address], { from: alice, value: AMOUNTIN });
 
       //get alice ONE balance after zapIn()
       nativeBalancePrev = await web3.eth.getBalance(alice)
 
       // get alice WONE balance
-      aliceWONEafterZapIn = await nativeCoin.balanceOf(alice);
+      aliceWONEafterZapIn = await wrappedNativeCoin.balanceOf(alice);
 
       // get other token balance after zapIn()
       aliceLPBalancePrev = await lpToken.balanceOf(alice);
@@ -321,7 +329,7 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
 
       // get alice balance after zapout token to WONE.
       const nativeBalance = await web3.eth.getBalance(alice);
-      const WONEBalance = await nativeCoin.balanceOf(alice);
+      const WONEBalance = await wrappedNativeCoin.balanceOf(alice);
 
       //expect WONE balance to be the same
       expect(WONEBalance).to.be.a.bignumber.that.is.equal(aliceWONEafterZapIn);
@@ -331,7 +339,7 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
 
     });
 
-    it("Should zap out LPtoken to get back USDC", async () => {
+    it("Should zap out LPtoken to get back lpToken0", async () => {
 
       // Approve zap to use lpToken
       await liqToken.approve(this.zap.address, aliceLPBalancePrev.toString(), { from: alice });
@@ -340,10 +348,10 @@ contract("Zap", ([deployer, alice, bob, manager, devTeam]) => {
       await this.zap.zapOutToken(LPTOKENADDR, aliceLPBalancePrev.toString(), lpToken0.address, ROUTERADDRESS, [lpToken0.address, lpToken0.address], [lpToken1.address, lpToken0.address], { from: alice });
 
       // get alice usdc balance after zapOutToken to USDC.
-      const usdcBalance = await lpToken0.balanceOf(alice);
+      const lpToken0Balance = await lpToken0.balanceOf(alice);
 
       // expect USDC balance to increase after zapout
-      expect(usdcBalance).to.be.a.bignumber.that.is.gt(aliceUsdcBalancePrev);
+      expect(lpToken0Balance).to.be.a.bignumber.that.is.gt(aliceUsdcBalancePrev);
 
     });
 
